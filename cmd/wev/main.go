@@ -32,8 +32,8 @@ func main() {
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	pool, err := pgxpool.Connect(context.Background(), "user=goAdmin password=123 host=localhost port=5432 dbname=snippetbox sslmode=disable pool_max_conns=10")
 	if err != nil {
 		log.Fatalf("Unable to connection to database: %v\n", err)
@@ -48,7 +48,8 @@ func main() {
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
 
-	app := &application{errorLog,
+	app := &application{
+		errorLog,
 		infoLog,
 		session,
 		&postgres.SnippetModel{pool},
@@ -62,6 +63,6 @@ func main() {
 		Handler:  app.routes(),
 	}
 	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServe("./tls/cert.pem", "./tls/key.pem")
 	errorLog.Fatal(err)
 }
